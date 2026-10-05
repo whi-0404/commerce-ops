@@ -23,11 +23,11 @@ func Load() Config {
 	return Config{
 		HTTP: HTTPConfig{
 			Port:              getEnvInt	("HTTP_PORT", 8083),
-			ReadTimeout:       getEnvDuration("HTTP_READ_TIMEOUT", 5*time.Second),
-			ReadHeaderTimeout: getEnvDuration("HTTP_READ_HEADER_TIMEOUT", 2*time.Second),
-			WriteTimeout:      getEnvDuration("HTTP_WRITE_TIMEOUT", 10*time.Second),
-			IdleTimeout:       getEnvDuration("HTTP_IDLE_TIMEOUT", 60*time.Second),
-			ShutdownTimeout:   getEnvDuration("HTTP_SHUTDOWN_TIMEOUT", 10*time.Second),
+			ReadTimeout:       getEnvDuration("HTTP_READ_TIMEOUT", 5*time.Second), // read timeout from the client request body
+			ReadHeaderTimeout: getEnvDuration("HTTP_READ_HEADER_TIMEOUT", 2*time.Second), // read timeout from the client request header
+			WriteTimeout:      getEnvDuration("HTTP_WRITE_TIMEOUT", 10*time.Second), // write timeout for the response to the client
+			IdleTimeout:       getEnvDuration("HTTP_IDLE_TIMEOUT", 60*time.Second), // idle timeout for keep-alive connections
+			ShutdownTimeout:   getEnvDuration("HTTP_SHUTDOWN_TIMEOUT", 10*time.Second), // timeout for graceful shutdown of the server
 		},
 	}
 }
