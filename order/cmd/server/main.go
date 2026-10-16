@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"io"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/rs/zerolog"
 	"github.com/whi-0404/commerce-ops/order/internal/config"
+	"github.com/whi-0404/commerce-ops/order/internal/logger"
 	"github.com/whi-0404/commerce-ops/order/internal/server"
 )
 
@@ -16,23 +15,20 @@ func main() {
 	// 1. Load config từ env
 	cfg := config.Load()
 
-	// 2. Setup zerolog — ConsoleWriter cho dev, JSON cho production
-	var writer io.Writer = os.Stdout
-	if os.Getenv("APP_ENV") != "production" {
-		writer = zerolog.ConsoleWriter{Out: os.Stdout}
-	}
-	logger := zerolog.New(writer).With().Timestamp().Str("service", "order").Logger()
+	// 2. Setup slog logger
+	appLogger := logger.New()
 
 	// 3. Setup router
-	router := server.NewRouter()
+	router := server.NewRouter(appLogger, cfg.HTTP.RequestTimeout)
 
-	// 4. Khởi tạo server
+	// 4. Khởi tạo http server
 	srv := server.New(cfg.HTTP, router)
 
 	// 5. Chạy server trong goroutine riêng
 	go func() {
-		if err := srv.Start(logger); err != nil {
-			logger.Fatal().Err(err).Msg("server error")
+		if err := srv.Start(appLogger); err != nil {
+			appLogger.Error("server error", "err", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -44,7 +40,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx, logger); err != nil {
-		logger.Fatal().Err(err).Msg("shutdown error")
+	if err := srv.Shutdown(ctx, appLogger); err != nil {
+		appLogger.Error("shutdown error", "err", err)
+		os.Exit(1)
 	}
 }

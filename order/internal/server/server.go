@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 
-	"github.com/rs/zerolog"
 	"github.com/whi-0404/commerce-ops/order/internal/config"
 )
 
@@ -28,8 +28,8 @@ func New(cfg config.HTTPConfig, handler http.Handler) *Server {
 	}
 }
 
-func (s *Server) Start(logger zerolog.Logger) error {
-	logger.Info().Str("addr", s.httpServer.Addr).Msg("HTTP server starting")
+func (s *Server) Start(logger *slog.Logger) error {
+	logger.Info("HTTP server starting", "addr", s.httpServer.Addr)
 
 	err := s.httpServer.ListenAndServe()
 
@@ -40,14 +40,15 @@ func (s *Server) Start(logger zerolog.Logger) error {
 	return nil
 }
 
-func (s *Server) Shutdown(ctx context.Context, logger zerolog.Logger) error {
-	logger.Info().Msg("HTTP server shutting down")
+func (s *Server) Shutdown(ctx context.Context, logger *slog.Logger) error {
+	logger.Info("HTTP server shutting down")
 
 	if err := s.httpServer.Shutdown(ctx); err != nil {
 		return err
 	}
 
-	logger.Info().Msg("HTTP server stopped")
+	logger.Info("HTTP server stopped")
 
 	return nil
 }
+
